@@ -1,0 +1,26 @@
+apiVersion: runtime.wasmcloud.dev/v1alpha1
+kind: WorkloadDeployment
+metadata:
+  name: wasm-caching-poc
+spec:
+  replicas: 1
+  template:
+    spec:
+      hostSelector:
+        hostgroup: default
+      components:
+        - name: http-api
+          image: ghcr.io/gopi200/wasm-caching-poc/http-api:0.1.0
+          imagePullSecret: 
+            name: github-personal-access-token
+      service:
+        image: ghcr.io/gopi200/wasm-caching-poc/service:0.1.0
+        imagePullSecret: 
+          name: github-personal-access-token
+      hostInterfaces:
+        - namespace: wasi
+          package: http
+          interfaces:
+            - incoming-handler
+          config:
+            host: poc:)

@@ -1,0 +1,64 @@
+on:
+  push:
+    branches:
+      - "main"
+    paths:
+      - "**/Cargo.toml"
+      - "**.rs"
+      - "**.wasm"
+      - "**.wit"
+
+env:
+  CARGO_TERM_COLOR: always
+  REGISTRY: ghcr.io
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: wasm32-wasip2
+          cache-directories: "target"
+          cache-all-crates: "true"
+
+      - name: Install toml cli
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: toml-cli
+
+      - name: Setup wash
+        uses: wasmCloud/setup-wash-action@main
+        with:
+          wash-version: wash-v2.0.0-rc.8
+      
+      - name: Fetch WIT dependencies
+        run: wash wit fetch
+
+      - name: Build project(s)
+        run: wash build
+      
+      - name: Log in to ghcr
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push to ghcr
+        run: |
+          registry_prefix=${{ env.REGISTRY }}/$(tr '[:upper:]' '[:lower:]' <<< ${{ github.repository }})
+          wash oci push $registry_prefix/service:$(toml get service/Cargo.toml package.version --raw) target/wasm32-wasip2/release/service.wasm
+          
+          for file in components/*/Cargo.toml; do
+            component_name=$(toml get $file package.name --raw)
+            wash oci push $registry_prefix/$component_name:$(toml get service/Cargo.toml package.version --raw) target/wasm32-wasip2/release/$(tr - _ <<< $component_name).wasm
+          done

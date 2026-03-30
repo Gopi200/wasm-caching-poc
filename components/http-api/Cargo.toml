@@ -1,0 +1,11 @@
+[package]
+name = "http-api"
+edition = "2024"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wit-bindgen = "0.54.0"
+wstd = "0.6"

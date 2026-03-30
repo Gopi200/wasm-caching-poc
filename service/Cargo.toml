@@ -1,0 +1,8 @@
+[package]
+name = "service"
+edition = "2024"
+version = "0.1.0"
+
+[dependencies]
+wit-bindgen = "0.54.0"
+wstd = "0.6.6"
