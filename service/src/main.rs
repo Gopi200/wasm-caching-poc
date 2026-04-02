@@ -1,32 +1,34 @@
-use std::sync::{LazyLock, Mutex};
+use std::{cell::Cell, rc::Rc};
 
-use wstd::{io::AsyncWrite, iter::AsyncIterator, net::TcpListener};
+use shared::{Action, Direction};
 
 #[wstd::main]
 async fn main() -> wstd::io::Result<()> {
-    let listener = TcpListener::bind("0.0.0.0:8080").await?;
-    println!("Listening on {}", listener.local_addr()?);
-    println!("type `nc localhost 8080` to create a TCP client");
-
-    let mut incoming = listener.incoming();
-    while let Some(stream) = incoming.next().await {
-        let mut stream = stream?;
-        println!("Accepted from: {}", stream.peer_addr()?);
-        wstd::runtime::spawn(async move {
-            // If echo copy fails, we can ignore it.
-            let _ = stream.write(&increment()).await;
-        })
-        .detach();
-    }
-    Ok(())
+    let counter: Rc<Cell<i32>> = Rc::new(Cell::default());
+    wash_service_helpers::run_tcp_server(8080, async move |action: Action| {
+        process_message(&counter, action).await
+    })
+    .await
 }
 
-static CACHE: LazyLock<Mutex<u32>> = LazyLock::new(Mutex::default);
+async fn process_message(counter: &Cell<i32>, action: Action) -> i32 {
+    match action {
+        Action::Get => get_counter_value(counter),
+        Action::Update(direction) => update_counter_value(counter, direction),
+    }
+}
 
-fn increment() -> [u8; 4] {
-    // Return a simple response with a string body
-    let mut val = CACHE.lock().unwrap();
-    *val += 1;
-    println!("{val}");
-    val.to_be_bytes()
+fn get_counter_value(counter: &Cell<i32>) -> i32 {
+    counter.get()
+}
+
+fn update_counter_value(counter: &Cell<i32>, direction: Direction) -> i32 {
+    let offset = match direction {
+        Direction::Increment => 1,
+        Direction::Decrement => -1,
+    };
+
+    let counter_value = counter.get() + offset;
+    counter.set(counter_value);
+    counter_value
 }

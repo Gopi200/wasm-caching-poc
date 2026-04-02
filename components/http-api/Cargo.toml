@@ -7,5 +7,6 @@ version = "0.1.0"
 crate-type = ["cdylib"]
 
 [dependencies]
-wit-bindgen = "0.54.0"
+shared = { version = "0.1.0", path = "../../shared" }
+wash-service-helpers = { version = "0.1.0", path = "../../wash-service-helpers" }
 wstd = "0.6"

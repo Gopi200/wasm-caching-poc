@@ -1,0 +1,15 @@
+# Wasm Caching PoC
+This is a proof of concept/template for using wasm services to keep track of persistent state such as caches or database pools.
+Database pooling does not yet work because there is no proper MySql implementation for wasm32-wasip2.
+
+## Creating a wasm service
+To create a wasm service, create a wasm component that exports either wasi:cli/run (as done in this template) or a custom wit interface (could not get this to work, the service seems to not start when trying to run it if you do this. May need further experimentation, but wasi:cli/run should be good enough for most use cases.).
+
+## Running a wasm service
+- wash dev: For running a service with wash dev you merely need to add `dev.service: true` to your wash config. Any other components that need to run in the same workload ([such as a http component to reach your service](#reaching-the-service)) will need to be specified in `dev.components` with a name and wasm file.
+- wasmcloud deployment: To run a wasm service you need to add it as a [WorkloadService](https://wasmcloud.com/docs/kubernetes-operator/api-reference/#workloadservice) to your workload deployment manifest. If the OCI image is private you will need to create a kubernetes docker config secret containing valid credentials to pull it and reference it with the imagePullSecret name on your WorkloadService. For an example of a valid workload deployment manifest, look [here](manifests/workloaddeployment.yaml).
+
+## Reaching the service
+You will most likely need a way to reach the wasm service from the outside. The recommended way to handle this is with a separate component that exports wasi:http/incoming-handler. Where you have to send requests to this component depends on how you run it.
+- wash dev: Requests to this component can be sent to the wash dev address (0.0.0.0:8000 by default, or can be configured in your wash config at `dev.address`)
+- wasmcloud deployment: Requests to this component can be sent to the address of the wasmcloud runtime gateway. In ubunty this is the wasmcloud-gateway service. You may need to open a port on the wasmcloud-gateway to be able to reach it from outside the docker network. This can easily be done by adding `services: wasmcloud-gateway: ports: -{your_port}:8000` to your docker compose override, replacing `{your_port}` with whatever unused port you want to send the requests to. These requests must have a host header matching the host config option on the wasi http incoming handler hostInterface in your workload deployment manifest. Note that this does not have to be a valid host address, it is only used by the runtime gateway to route the requests.

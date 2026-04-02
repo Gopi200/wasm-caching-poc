@@ -11,12 +11,8 @@ spec:
       components:
         - name: http-api
           image: ghcr.io/gopi200/wasm-caching-poc/http-api:0.1.0
-          imagePullSecret: 
-            name: github-personal-access-token
       service:
         image: ghcr.io/gopi200/wasm-caching-poc/service:0.1.0
-        imagePullSecret: 
-          name: github-personal-access-token
       hostInterfaces:
         - namespace: wasi
           package: http

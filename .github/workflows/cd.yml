@@ -39,9 +39,6 @@ jobs:
         uses: wasmCloud/setup-wash-action@main
         with:
           wash-version: wash-v2.0.0-rc.8
-      
-      - name: Fetch WIT dependencies
-        run: wash wit fetch
 
       - name: Build project(s)
         run: wash build

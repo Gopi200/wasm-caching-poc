@@ -1,3 +1,3 @@
 [workspace]
 resolver = "3"
-members = ["service", "components/*"]
+members = ["service", "components/*", "shared"]

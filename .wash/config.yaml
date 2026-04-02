@@ -8,5 +8,3 @@ dev:
   components:
     - name: http-api
       file: target/wasm32-wasip2/release/http_api.wasm
-
-  service_file: service/target/wasm32-wasip2/release/service.wasm
