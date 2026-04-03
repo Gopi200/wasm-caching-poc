@@ -1,6 +1,6 @@
 # Wasm Caching PoC
 This is a proof of concept/template for using wasm services to keep track of persistent state such as caches or database pools.
-Database pooling does not yet work because there is no proper MySql implementation for wasm32-wasip2.
+Database pooling does not yet work because there is no proper MySql implementation for wasm32-wasip2. There is an implementation for this in progress on sqlx. You can track that issue [here](https://github.com/launchbadge/sqlx/issues/4056). Otherwise it would be possible implement the mysql protocol in wasm or use a host plugin, but for now it is recommended to wait until sqlx support is finished.
 
 ## Creating a wasm service
 To create a wasm service, create a wasm component that exports either wasi:cli/run (as done in this template) or a custom wit interface (could not get this to work, the service seems to not start when trying to run it if you do this. May need further experimentation, but wasi:cli/run should be good enough for most use cases.).
